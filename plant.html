@@ -16,10 +16,6 @@
       --soft:#e8f0e4;
       --border:#cfdccc;
       --shadow:0 8px 20px rgba(40,60,40,.08);
-      --badge-bg1:#fff9ea;
-      --badge-bg2:#fff3c9;
-      --badge-border:#f0d58a;
-      --badge-text:#5a4612;
     }
 
     * { box-sizing: border-box; }
@@ -111,12 +107,6 @@
       line-height:1.35;
     }
 
-    h3{
-      margin:0 0 10px;
-      font-size:22px;
-      line-height:1.45;
-    }
-
     p{
       margin:0 0 14px;
       line-height:1.9;
@@ -163,22 +153,6 @@
       margin-bottom:0;
       font-size:18px;
       color:var(--text);
-    }
-
-    .badge-card{
-      border:2px solid var(--badge-border);
-      background:linear-gradient(180deg, var(--badge-bg1) 0%, var(--badge-bg2) 100%);
-      border-radius:20px;
-      padding:18px;
-      margin-top:12px;
-    }
-
-    .badge-card p{
-      margin:0;
-      font-size:20px;
-      color:var(--badge-text);
-      font-weight:700;
-      line-height:1.8;
     }
 
     input, button, a.btn{
@@ -231,7 +205,6 @@
 
     #manualBox{ display:none; }
     #actionBox{ display:none; }
-    #bonusBox{ display:none; }
 
     @media (max-width:700px){
       body{ padding:16px 12px 28px; }
@@ -240,7 +213,6 @@
       .hero p{ font-size:17px; }
       .card{ padding:18px; border-radius:18px; }
       h2{ font-size:24px; }
-      h3{ font-size:20px; }
       p{ font-size:17px; }
       .status-text{ font-size:20px; }
       input, button, a.btn{ font-size:19px; padding:17px 14px; }
@@ -251,13 +223,13 @@
   <div class="wrap">
     <div class="hero">
       <h1>植物探索導覽站</h1>
-      <p>系統會先幫你記錄本次植物探索，再開啟植物介紹頁。若本次達成 bonus，也會先顯示新獲得的徽章。</p>
+      <p>系統會先帶你前往植物探索結果頁，再顯示最新點數與加成徽章，之後即可進入植物介紹頁。</p>
     </div>
 
     <div class="card">
       <div class="section-title">Plant Guide</div>
       <h2>植物探索入口</h2>
-      <p class="lead">掃描植物牌後，系統會自動同步探索紀錄，並帶你前往植物介紹頁。</p>
+      <p class="lead">掃描植物牌後，系統會先同步你的探索紀錄，再顯示本次結果。</p>
 
       <div class="status-box">
         <div class="status-label">目前狀態</div>
@@ -272,14 +244,8 @@
         <button id="savePhoneBtn" class="primary">送出並開始導覽</button>
       </div>
 
-      <div id="bonusBox" class="card" style="padding:0; border:none; box-shadow:none; margin-top:16px; margin-bottom:0;">
-        <div class="section-title">Bonus Badge</div>
-        <h2>加成達成徽章</h2>
-        <div id="bonusList"></div>
-      </div>
-
       <div id="actionBox">
-        <a id="goBtn" class="btn primary" href="#" target="_blank" rel="noopener">進入植物介紹</a>
+        <a id="goBtn" class="btn primary" href="#" target="_top">前往植物探索結果頁</a>
 
         <div class="grid">
           <a id="scanBtn" class="btn secondary" href="#" target="_top">繼續探索植物</a>
@@ -289,7 +255,7 @@
         </div>
 
         <div class="feature" style="margin-top:16px;">
-          <p>若植物介紹頁沒有自動開啟，可直接按上方「進入植物介紹」。閱讀完成後，可回到本頁繼續使用其他功能。</p>
+          <p>若沒有自動前往結果頁，可直接按上方按鈕。進入結果頁後會顯示最新點數與 bonus 徽章。</p>
         </div>
       </div>
     </div>
@@ -298,7 +264,6 @@
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
-    const OPEN_DELAY_MS = 1200;
     const AUTO_KEY = "plant_auto_done_";
 
     function normalizePhone(phone) {
@@ -326,8 +291,6 @@
     const statusEl = document.getElementById("status");
     const manualBox = document.getElementById("manualBox");
     const actionBox = document.getElementById("actionBox");
-    const bonusBox = document.getElementById("bonusBox");
-    const bonusList = document.getElementById("bonusList");
     const phoneInput = document.getElementById("phoneInput");
     const savePhoneBtn = document.getElementById("savePhoneBtn");
 
@@ -345,8 +308,13 @@
         phone: phone,
         home: homeUrl
       });
+      const resultUrl = buildUrl(APP_URL, {
+        mode: "plant_result",
+        plant: plantId,
+        phone: phone
+      });
 
-      goBtn.href = pageUrl;
+      goBtn.href = resultUrl;
       scanBtn.href = scanUrl;
       queryBtn.href = queryUrl;
       rewardBtn.href = rewardUrl;
@@ -357,87 +325,21 @@
       actionBox.style.display = "block";
     }
 
-    function showBonusMessages(messages) {
-      if (!messages || !messages.length) {
-        bonusBox.style.display = "none";
-        bonusList.innerHTML = "";
-        return;
-      }
-
-      bonusList.innerHTML = messages.map(msg => `
-        <div class="badge-card">
-          <p>🏅 ${escapeHtml(msg)}</p>
-        </div>
-      `).join("");
-
-      bonusBox.style.display = "block";
-    }
-
-    function openPlantPage() {
-      const win = window.open(pageUrl, "_blank");
-      if (!win) {
-        window.location.assign(pageUrl);
-        return;
-      }
-      statusEl.textContent = "植物介紹頁已開啟。閱讀完成後，可回到此頁繼續探索。";
-    }
-
-    function escapeHtml(str) {
-      return String(str || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    async function markPlant(phone) {
-      const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}&_ts=${Date.now()}`;
-
-      const res = await fetch(url, {
-        method: "GET",
-        cache: "no-store"
-      });
-
-      if (!res.ok) {
-        throw new Error("API 呼叫失敗");
-      }
-
-      return await res.json();
-    }
-
-    async function startWithPhone(phone) {
+    function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
 
       const alreadyAutoOpened = sessionStorage.getItem(AUTO_KEY + plantId) === "1";
       if (alreadyAutoOpened) {
-        statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
+        statusEl.textContent = "你已回到植物探索站，可重新前往結果頁，或使用下方功能按鈕。";
         return;
       }
 
-      try {
-        statusEl.textContent = "正在同步植物探索紀錄…";
-        const result = await markPlant(phone);
+      sessionStorage.setItem(AUTO_KEY + plantId, "1");
+      statusEl.textContent = "正在前往植物探索結果頁…";
 
-        sessionStorage.setItem(AUTO_KEY + plantId, "1");
-
-        if (result && result.bonusMessages && result.bonusMessages.length) {
-          showBonusMessages(result.bonusMessages);
-          statusEl.textContent = "已獲得新的加成徽章，正在為你開啟植物介紹頁…";
-        } else {
-          showBonusMessages([]);
-          statusEl.textContent = "探索紀錄已同步，正在開啟植物介紹頁…";
-        }
-
-        setTimeout(function() {
-          openPlantPage();
-        }, OPEN_DELAY_MS);
-
-      } catch (err) {
-        statusEl.textContent = "同步探索紀錄時發生問題，請稍後再試，或直接點下方按鈕前往植物介紹。";
-        showActionBox();
-      }
+      const resultUrl = `${APP_URL}?mode=plant_result&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+      window.location.href = resultUrl;
     }
 
     function start() {
