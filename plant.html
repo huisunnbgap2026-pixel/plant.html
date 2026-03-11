@@ -75,7 +75,7 @@
   <div class="wrap">
     <div class="card">
       <h2>正在開啟植物介紹頁</h2>
-      <p id="status">請稍候，系統正在記錄你的植物導覽點數…</p>
+      <p id="status">請稍候，系統正在同步你的植物導覽紀錄…</p>
 
       <div id="manualBox">
         <input id="phoneInput" type="text" placeholder="請輸入手機號碼">
@@ -114,16 +114,15 @@
       window.top.location.href = pageUrl;
     }
 
-    async function markPlant(phone) {
+    function markPlant(phone) {
       const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
-
       try {
-        await fetch(url, { method: "GET", mode: "no-cors" });
-      } catch (e) {
-        // no-cors 下即使失敗也繼續導頁
-      }
-
-      goToPlantPage();
+        fetch(url, {
+          method: "GET",
+          mode: "no-cors",
+          keepalive: true
+        });
+      } catch (e) {}
     }
 
     function start() {
@@ -140,8 +139,9 @@
         return;
       }
 
-      statusEl.textContent = "已記錄導覽點數，正在前往植物介紹頁…";
+      statusEl.textContent = "正在開啟植物介紹頁…";
       markPlant(savedPhone);
+      setTimeout(goToPlantPage, 150);
     }
 
     savePhoneBtn.addEventListener("click", function () {
@@ -150,10 +150,12 @@
         statusEl.textContent = "請先輸入正確手機號碼。";
         return;
       }
+
       localStorage.setItem("savedPhone", phone);
-      statusEl.textContent = "已記錄導覽點數，正在前往植物介紹頁…";
+      statusEl.textContent = "正在開啟植物介紹頁…";
       manualBox.style.display = "none";
       markPlant(phone);
+      setTimeout(goToPlantPage, 150);
     });
 
     start();
