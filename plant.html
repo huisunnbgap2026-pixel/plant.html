@@ -173,6 +173,7 @@
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
+    const MARK_TIMEOUT_MS = 1200;
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -233,24 +234,18 @@
       window.top.location.href = pageUrl;
     }
 
-    function fetchWithTimeout(url, timeoutMs) {
-      return Promise.race([
-        fetch(url, {
-          method: "GET",
-          credentials: "omit",
-          cache: "no-store"
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("timeout")), timeoutMs)
-        )
-      ]);
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     async function markPlant(phone) {
       const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
-
       try {
-        const res = await fetchWithTimeout(url, 4000);
+        const res = await fetch(url, {
+          method: "GET",
+          credentials: "omit",
+          cache: "no-store"
+        });
         const data = await res.json();
         return data;
       } catch (e) {
@@ -258,21 +253,27 @@
       }
     }
 
+    async function markWithTimeout(phone) {
+      return Promise.race([
+        markPlant(phone),
+        delay(MARK_TIMEOUT_MS).then(() => ({ success: false, message: "timeout" }))
+      ]);
+    }
+
     async function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
       statusEl.textContent = "正在同步植物導覽紀錄…";
 
-      const result = await markPlant(phone);
+      const result = await markWithTimeout(phone);
 
       if (result && result.success) {
         statusEl.textContent = "已完成導覽紀錄，正在開啟植物介紹頁…";
-        setTimeout(goToPlantPage, 250);
-        return;
+      } else {
+        statusEl.textContent = "正在開啟植物介紹頁…";
       }
 
-      statusEl.textContent = "本次導覽紀錄同步較慢，請點『前往植物介紹頁』繼續；稍後可到進度頁確認是否已記錄。";
-      goBtn.style.display = "block";
+      setTimeout(goToPlantPage, 120);
     }
 
     function start() {
@@ -281,7 +282,7 @@
         return;
       }
 
-      let savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
+      const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
 
       if (!savedPhone) {
         statusEl.textContent = "請先輸入手機號碼。";
