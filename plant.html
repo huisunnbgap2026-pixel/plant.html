@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>植物導覽</title>
+  <title>植物探索站</title>
   <style>
     body {
       margin: 0;
@@ -16,28 +16,89 @@
     }
 
     .wrap {
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
+    }
+
+    .hero {
+      margin-bottom: 18px;
+      padding: 22px 22px 18px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(90,130,94,0.94), rgba(127,162,112,0.90));
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(69,89,63,0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.25;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.93);
+      position: relative;
+      z-index: 1;
     }
 
     .card {
       background: rgba(255,255,255,0.94);
       border: 1px solid rgba(79,122,87,0.12);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 24px;
       box-shadow: 0 10px 30px rgba(69,89,63,0.12);
       text-align: center;
     }
 
+    .section-title {
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #6c7a67;
+      margin-bottom: 10px;
+    }
+
     h2 {
       margin: 0 0 12px;
       font-size: 22px;
+      line-height: 1.35;
     }
 
     p {
       margin: 0 0 12px;
       line-height: 1.8;
       color: #6c7a67;
+      font-size: 16px;
     }
 
     input, button, a {
@@ -55,6 +116,7 @@
     input {
       background: #fff;
       border: 1px solid #d8e4d3;
+      color: #2f3a2f;
     }
 
     button, a.primary {
@@ -68,12 +130,28 @@
     }
 
     #manualBox { display: none; }
+    #actionBox { display: none; }
     #goBtn { display: none; }
+
+    @media (max-width: 640px) {
+      body { padding: 18px 12px 32px; }
+      .hero { padding: 18px 18px 16px; border-radius: 20px; }
+      .hero h1 { font-size: 24px; }
+      .card { padding: 18px; border-radius: 18px; }
+      h2 { font-size: 20px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="hero">
+      <div class="badge">植物導覽集章</div>
+      <h1>植物探索站</h1>
+      <p>掃描植物牌、記錄探索點數、前往植物介紹頁，展開你的植物探索旅程。</p>
+    </div>
+
     <div class="card">
+      <div class="section-title">Plant Guide</div>
       <h2>正在開啟植物介紹頁</h2>
       <p id="status">請稍候，系統正在同步你的植物導覽紀錄…</p>
 
@@ -82,12 +160,19 @@
         <button id="savePhoneBtn">送出並前往植物頁</button>
       </div>
 
-      <a id="goBtn" class="primary" href="#" target="_top">前往植物介紹頁</a>
+      <div id="actionBox">
+        <a id="goBtn" class="primary" href="#" target="_top">前往植物介紹頁</a>
+        <a id="scanBtn" class="secondary" href="#" target="_top">繼續掃描 QR Code</a>
+        <a id="queryBtn" class="secondary" href="#" target="_top">查看我的進度</a>
+        <a id="rewardBtn" class="secondary" href="#" target="_top">查看可兌換獎勵</a>
+        <a id="homeBtn" class="secondary" href="#" target="_top">回首頁</a>
+      </div>
     </div>
   </div>
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -100,16 +185,51 @@
       return url.searchParams.get(name) || "";
     }
 
+    function buildUrl(base, params) {
+      const u = new URL(base);
+      Object.keys(params).forEach(function(key) {
+        u.searchParams.set(key, params[key]);
+      });
+      return u.toString();
+    }
+
     const plantId = getParam("plant");
     const pageUrl = getParam("page");
+
     const statusEl = document.getElementById("status");
     const manualBox = document.getElementById("manualBox");
-    const goBtn = document.getElementById("goBtn");
+    const actionBox = document.getElementById("actionBox");
     const phoneInput = document.getElementById("phoneInput");
     const savePhoneBtn = document.getElementById("savePhoneBtn");
 
-    function goToPlantPage() {
+    const goBtn = document.getElementById("goBtn");
+    const scanBtn = document.getElementById("scanBtn");
+    const queryBtn = document.getElementById("queryBtn");
+    const rewardBtn = document.getElementById("rewardBtn");
+    const homeBtn = document.getElementById("homeBtn");
+
+    function setActionLinks(phone) {
+      const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
+      const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
+      const rewardUrl = buildUrl(APP_URL, { mode: "rewards", phone: phone });
+      const scanUrl = buildUrl(SCANNER_URL, {
+        phone: phone,
+        home: homeUrl
+      });
+
       goBtn.href = pageUrl;
+      scanBtn.href = scanUrl;
+      queryBtn.href = queryUrl;
+      rewardBtn.href = rewardUrl;
+      homeBtn.href = homeUrl;
+    }
+
+    function showActionBox() {
+      actionBox.style.display = "block";
+      goBtn.style.display = "block";
+    }
+
+    function goToPlantPage() {
       goBtn.style.display = "block";
       window.top.location.href = pageUrl;
     }
@@ -123,6 +243,14 @@
           keepalive: true
         });
       } catch (e) {}
+    }
+
+    function startWithPhone(phone) {
+      setActionLinks(phone);
+      showActionBox();
+      statusEl.textContent = "正在開啟植物介紹頁…";
+      markPlant(phone);
+      setTimeout(goToPlantPage, 150);
     }
 
     function start() {
@@ -139,9 +267,7 @@
         return;
       }
 
-      statusEl.textContent = "正在開啟植物介紹頁…";
-      markPlant(savedPhone);
-      setTimeout(goToPlantPage, 150);
+      startWithPhone(savedPhone);
     }
 
     savePhoneBtn.addEventListener("click", function () {
@@ -152,10 +278,8 @@
       }
 
       localStorage.setItem("savedPhone", phone);
-      statusEl.textContent = "正在開啟植物介紹頁…";
       manualBox.style.display = "none";
-      markPlant(phone);
-      setTimeout(goToPlantPage, 150);
+      startWithPhone(phone);
     });
 
     start();
