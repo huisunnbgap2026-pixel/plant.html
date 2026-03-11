@@ -173,7 +173,7 @@
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
-    const MARK_TIMEOUT_MS = 1200;
+    const REDIRECT_DELAY_MS = 700;
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -234,46 +234,36 @@
       window.top.location.href = pageUrl;
     }
 
-    function delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async function markPlant(phone) {
+    function markPlant(phone) {
       const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+
       try {
-        const res = await fetch(url, {
+        fetch(url, {
           method: "GET",
-          credentials: "omit",
+          mode: "no-cors",
+          keepalive: true,
           cache: "no-store"
         });
-        const data = await res.json();
-        return data;
-      } catch (e) {
-        return { success: false, message: "network_error" };
-      }
+      } catch (e) {}
+
+      // 再補一個 image beacon，增加送達機率
+      try {
+        const img = new Image();
+        img.src = url + "&_ts=" + Date.now();
+      } catch (e) {}
     }
 
-    async function markWithTimeout(phone) {
-      return Promise.race([
-        markPlant(phone),
-        delay(MARK_TIMEOUT_MS).then(() => ({ success: false, message: "timeout" }))
-      ]);
-    }
-
-    async function startWithPhone(phone) {
+    function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
       statusEl.textContent = "正在同步植物導覽紀錄…";
 
-      const result = await markWithTimeout(phone);
+      markPlant(phone);
 
-      if (result && result.success) {
-        statusEl.textContent = "已完成導覽紀錄，正在開啟植物介紹頁…";
-      } else {
+      setTimeout(function() {
         statusEl.textContent = "正在開啟植物介紹頁…";
-      }
-
-      setTimeout(goToPlantPage, 120);
+        goToPlantPage();
+      }, REDIRECT_DELAY_MS);
     }
 
     function start() {
