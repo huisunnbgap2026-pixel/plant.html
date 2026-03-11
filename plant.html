@@ -131,7 +131,6 @@
 
     #manualBox { display: none; }
     #actionBox { display: none; }
-    #goBtn { display: none; }
 
     @media (max-width: 640px) {
       body { padding: 18px 12px 32px; }
@@ -152,12 +151,12 @@
 
     <div class="card">
       <div class="section-title">Plant Guide</div>
-      <h2>正在開啟植物介紹頁</h2>
+      <h2>植物導覽入口</h2>
       <p id="status">請稍候，系統正在同步你的植物導覽紀錄…</p>
 
       <div id="manualBox">
         <input id="phoneInput" type="text" placeholder="請輸入手機號碼">
-        <button id="savePhoneBtn">送出並前往植物頁</button>
+        <button id="savePhoneBtn">送出並開始導覽</button>
       </div>
 
       <div id="actionBox">
@@ -173,7 +172,7 @@
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
-    const REDIRECT_DELAY_MS = 700;
+    const REDIRECT_DELAY_MS = 900;
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -209,6 +208,9 @@
     const rewardBtn = document.getElementById("rewardBtn");
     const homeBtn = document.getElementById("homeBtn");
 
+    // 每株植物一個 session key，避免按返回後又自動跳轉
+    const visitKey = `plant_visit_once_${plantId}`;
+
     function setActionLinks(phone) {
       const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
       const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
@@ -227,7 +229,6 @@
 
     function showActionBox() {
       actionBox.style.display = "block";
-      goBtn.style.display = "block";
     }
 
     function goToPlantPage() {
@@ -235,7 +236,7 @@
     }
 
     function markPlant(phone) {
-      const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+      const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}&_ts=${Date.now()}`;
 
       try {
         fetch(url, {
@@ -246,19 +247,32 @@
         });
       } catch (e) {}
 
-      // 再補一個 image beacon，增加送達機率
       try {
         const img = new Image();
-        img.src = url + "&_ts=" + Date.now();
+        img.src = url + "&beacon=1";
       } catch (e) {}
+    }
+
+    function showReturnState(phone) {
+      setActionLinks(phone);
+      showActionBox();
+      statusEl.textContent = "你已回到植物探索站，可繼續前往植物頁，或使用下方功能按鈕。";
     }
 
     function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
-      statusEl.textContent = "正在同步植物導覽紀錄…";
 
+      // 若是從植物頁按返回回來，就不要再自動跳
+      if (sessionStorage.getItem(visitKey) === "done") {
+        showReturnState(phone);
+        return;
+      }
+
+      statusEl.textContent = "正在同步植物導覽紀錄…";
       markPlant(phone);
+
+      sessionStorage.setItem(visitKey, "done");
 
       setTimeout(function() {
         statusEl.textContent = "正在開啟植物介紹頁…";
