@@ -17,9 +17,7 @@
       --border:rgba(79,122,87,.14);
       --shadow:0 14px 34px rgba(55,80,53,.12);
     }
-
     *{ box-sizing:border-box; }
-
     body{
       margin:0;
       padding:20px 14px 36px;
@@ -30,12 +28,7 @@
         radial-gradient(circle at bottom right, rgba(122,160,110,0.16), transparent 24%),
         linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
     }
-
-    .wrap{
-      max-width:720px;
-      margin:0 auto;
-    }
-
+    .wrap{ max-width:720px; margin:0 auto; }
     .hero{
       margin-bottom:18px;
       padding:22px 22px 18px;
@@ -46,25 +39,14 @@
       position:relative;
       overflow:hidden;
     }
-
-    .hero:before,
-    .hero:after{
+    .hero:before,.hero:after{
       content:"";
       position:absolute;
       border-radius:50%;
       background:rgba(255,255,255,.08);
     }
-
-    .hero:before{
-      width:150px;height:150px;
-      top:-40px;right:-30px;
-    }
-
-    .hero:after{
-      width:90px;height:90px;
-      bottom:-20px;left:-10px;
-    }
-
+    .hero:before{ width:150px;height:150px; top:-40px;right:-30px; }
+    .hero:after{ width:90px;height:90px; bottom:-20px;left:-10px; }
     .badge{
       display:inline-block;
       padding:6px 12px;
@@ -76,7 +58,6 @@
       position:relative;
       z-index:1;
     }
-
     .hero h1{
       margin:0 0 8px;
       font-size:28px;
@@ -84,7 +65,6 @@
       position:relative;
       z-index:1;
     }
-
     .hero p{
       margin:0;
       font-size:14px;
@@ -93,7 +73,6 @@
       position:relative;
       z-index:1;
     }
-
     .card{
       background:var(--card);
       border:1px solid var(--border);
@@ -102,7 +81,6 @@
       box-shadow:var(--shadow);
       backdrop-filter:blur(6px);
     }
-
     .section-title{
       font-size:13px;
       letter-spacing:1px;
@@ -110,20 +88,17 @@
       color:var(--muted);
       margin-bottom:8px;
     }
-
     h2{
       margin:0 0 10px;
       font-size:24px;
       line-height:1.3;
     }
-
     p{
       margin:0 0 12px;
       line-height:1.8;
       color:var(--muted);
       font-size:16px;
     }
-
     .status-box{
       margin-top:14px;
       padding:14px 16px;
@@ -132,25 +107,21 @@
       border:1px solid rgba(79,122,87,.10);
       text-align:left;
     }
-
     .status-label{
       font-size:13px;
       color:var(--muted);
       margin-bottom:6px;
     }
-
     .status-text{
       font-size:17px;
       color:var(--text);
       line-height:1.7;
     }
-
     .tip{
       margin-top:12px;
       font-size:14px;
       color:var(--muted);
     }
-
     input, button, a.btn{
       width:100%;
       display:block;
@@ -163,42 +134,31 @@
       border:0;
       text-align:center;
     }
-
     input{
       background:#fff;
       border:1px solid #d8e4d3;
       color:var(--text);
       outline:none;
     }
-
-    input:focus{
-      border-color:rgba(79,122,87,.4);
-      box-shadow:0 0 0 4px rgba(79,122,87,.08);
-    }
-
     button.primary, a.btn.primary{
       background:linear-gradient(135deg, var(--primary), var(--primary-dark));
       color:#fff;
       box-shadow:0 8px 18px rgba(79,122,87,.2);
       cursor:pointer;
     }
-
     a.btn.secondary{
       background:var(--soft);
       color:var(--text);
       border:1px solid rgba(79,122,87,.08);
     }
-
     .grid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:12px;
       margin-top:8px;
     }
-
     #manualBox{ display:none; }
     #actionBox{ display:none; }
-
     @media (max-width:640px){
       body{ padding:16px 12px 30px; }
       .hero{ padding:18px 18px 16px; border-radius:22px; }
@@ -233,14 +193,14 @@
       </div>
 
       <div id="actionBox">
-        <a id="goBtn" class="btn primary" href="#" target="_top">進入植物介紹</a>
+        <a id="goBtn" class="btn primary" href="#" target="_blank" rel="noopener">進入植物介紹</a>
         <div class="grid">
           <a id="scanBtn" class="btn secondary" href="#" target="_top">繼續探索植物</a>
           <a id="homeBtn" class="btn secondary" href="#" target="_top">返回展區首頁</a>
           <a id="queryBtn" class="btn secondary" href="#" target="_top">查看探索進度</a>
           <a id="rewardBtn" class="btn secondary" href="#" target="_top">查看探索獎勵</a>
         </div>
-        <p class="tip">若未自動跳轉，可直接點「進入植物介紹」。從植物頁返回時，也會保留這些功能按鈕。</p>
+        <p class="tip">植物介紹頁會以新分頁開啟。閱讀完成後，可回到此頁繼續探索。</p>
       </div>
     </div>
   </div>
@@ -248,8 +208,8 @@
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
-    const REDIRECT_DELAY_MS = 850;
-    const RETURN_WINDOW_MS = 15000;
+    const OPEN_DELAY_MS = 900;
+    const AUTO_KEY = "plant_auto_done_";
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -285,8 +245,6 @@
     const rewardBtn = document.getElementById("rewardBtn");
     const homeBtn = document.getElementById("homeBtn");
 
-    const visitKey = "plant_visit_state_" + plantId;
-
     function setActionLinks(phone) {
       const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
       const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
@@ -307,13 +265,8 @@
       actionBox.style.display = "block";
     }
 
-    function goToPlantPage() {
-      window.location.assign(pageUrl);
-    }
-
     function markPlant(phone) {
       const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}&_ts=${Date.now()}`;
-
       try {
         fetch(url, {
           method: "GET",
@@ -329,46 +282,34 @@
       } catch (e) {}
     }
 
-    function showReturnState(phone) {
-      setActionLinks(phone);
-      showActionBox();
-      statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
-    }
-
-    function shouldAutoRedirect() {
-      try {
-        const raw = sessionStorage.getItem(visitKey);
-        if (!raw) return true;
-        const ts = Number(raw) || 0;
-        return (Date.now() - ts) > RETURN_WINDOW_MS;
-      } catch (e) {
-        return true;
+    function openPlantPage() {
+      const win = window.open(pageUrl, "_blank");
+      if (!win) {
+        window.location.assign(pageUrl);
+        return;
       }
-    }
-
-    function rememberVisit() {
-      try {
-        sessionStorage.setItem(visitKey, String(Date.now()));
-      } catch (e) {}
+      statusEl.textContent = "植物介紹頁已開啟。閱讀完成後，可回到此頁繼續探索。";
     }
 
     function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
 
-      if (!shouldAutoRedirect()) {
-        showReturnState(phone);
+      const alreadyAutoOpened = sessionStorage.getItem(AUTO_KEY + plantId) === "1";
+      if (alreadyAutoOpened) {
+        statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
         return;
       }
 
       statusEl.textContent = "正在同步植物導覽紀錄…";
-      rememberVisit();
       markPlant(phone);
+
+      sessionStorage.setItem(AUTO_KEY + plantId, "1");
 
       setTimeout(function() {
         statusEl.textContent = "正在開啟植物介紹頁…";
-        goToPlantPage();
-      }, REDIRECT_DELAY_MS);
+        openPlantPage();
+      }, OPEN_DELAY_MS);
     }
 
     function start() {
@@ -397,15 +338,6 @@
       localStorage.setItem("savedPhone", phone);
       manualBox.style.display = "none";
       startWithPhone(phone);
-    });
-
-    window.addEventListener("pageshow", function(event) {
-      if (event.persisted) {
-        const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
-        if (savedPhone && plantId && pageUrl) {
-          showReturnState(savedPhone);
-        }
-      }
     });
 
     start();
