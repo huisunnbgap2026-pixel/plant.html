@@ -223,13 +223,13 @@
   <div class="wrap">
     <div class="hero">
       <h1>植物探索導覽站</h1>
-      <p>系統會先帶你前往植物探索結果頁，再顯示最新點數與加成徽章，之後即可進入植物介紹頁。</p>
+      <p>系統會先背景記錄本次植物探索，接著直接開啟植物介紹頁面。</p>
     </div>
 
     <div class="card">
       <div class="section-title">Plant Guide</div>
       <h2>植物探索入口</h2>
-      <p class="lead">掃描植物牌後，系統會先同步你的探索紀錄，再顯示本次結果。</p>
+      <p class="lead">掃描植物牌後，會直接前往植物介紹頁。</p>
 
       <div class="status-box">
         <div class="status-label">目前狀態</div>
@@ -241,11 +241,11 @@
           手機號碼
         </label>
         <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric" autocomplete="tel">
-        <button id="savePhoneBtn" class="primary">送出並開始導覽</button>
+        <button id="savePhoneBtn" class="primary">送出並前往植物介紹</button>
       </div>
 
       <div id="actionBox">
-        <a id="goBtn" class="btn primary" href="#" target="_top">前往植物探索結果頁</a>
+        <a id="goBtn" class="btn primary" href="#" target="_top">重新前往植物介紹頁</a>
 
         <div class="grid">
           <a id="scanBtn" class="btn secondary" href="#" target="_top">繼續探索植物</a>
@@ -255,7 +255,7 @@
         </div>
 
         <div class="feature" style="margin-top:16px;">
-          <p>若沒有自動前往結果頁，可直接按上方按鈕。進入結果頁後會顯示最新點數與 bonus 徽章。</p>
+          <p>若沒有自動跳轉，可直接按上方按鈕重新進入植物介紹頁。</p>
         </div>
       </div>
     </div>
@@ -264,7 +264,8 @@
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
-    const AUTO_KEY = "plant_auto_done_";
+    const AUTO_KEY = "plant_auto_opened_";
+    const REDIRECT_DELAY_MS = 180;
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -308,13 +309,8 @@
         phone: phone,
         home: homeUrl
       });
-      const resultUrl = buildUrl(APP_URL, {
-        mode: "plant_result",
-        plant: plantId,
-        phone: phone
-      });
 
-      goBtn.href = resultUrl;
+      goBtn.href = pageUrl;
       scanBtn.href = scanUrl;
       queryBtn.href = queryUrl;
       rewardBtn.href = rewardUrl;
@@ -325,21 +321,50 @@
       actionBox.style.display = "block";
     }
 
+    function backgroundMarkPlant(phone) {
+      const markUrl = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}&_ts=${Date.now()}`;
+
+      try {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([], { type: "text/plain" });
+          navigator.sendBeacon(markUrl, blob);
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        const img = new Image();
+        img.src = markUrl;
+      } catch (e) {}
+
+      try {
+        fetch(markUrl, {
+          method: "GET",
+          mode: "no-cors",
+          cache: "no-store",
+          keepalive: true
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
     function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
 
       const alreadyAutoOpened = sessionStorage.getItem(AUTO_KEY + plantId) === "1";
       if (alreadyAutoOpened) {
-        statusEl.textContent = "你已回到植物探索站，可重新前往結果頁，或使用下方功能按鈕。";
+        statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
         return;
       }
 
       sessionStorage.setItem(AUTO_KEY + plantId, "1");
-      statusEl.textContent = "正在前往植物探索結果頁…";
+      statusEl.textContent = "正在開啟植物介紹頁…";
 
-      const resultUrl = `${APP_URL}?mode=plant_result&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
-      window.location.href = resultUrl;
+      backgroundMarkPlant(phone);
+
+      setTimeout(function() {
+        window.location.href = pageUrl;
+      }, REDIRECT_DELAY_MS);
     }
 
     function start() {
