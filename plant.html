@@ -230,27 +230,49 @@
     }
 
     function goToPlantPage() {
-      goBtn.style.display = "block";
       window.top.location.href = pageUrl;
     }
 
-    function markPlant(phone) {
-      const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
-      try {
+    function fetchWithTimeout(url, timeoutMs) {
+      return Promise.race([
         fetch(url, {
           method: "GET",
-          mode: "no-cors",
-          keepalive: true
-        });
-      } catch (e) {}
+          credentials: "omit",
+          cache: "no-store"
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), timeoutMs)
+        )
+      ]);
     }
 
-    function startWithPhone(phone) {
+    async function markPlant(phone) {
+      const url = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+
+      try {
+        const res = await fetchWithTimeout(url, 4000);
+        const data = await res.json();
+        return data;
+      } catch (e) {
+        return { success: false, message: "network_error" };
+      }
+    }
+
+    async function startWithPhone(phone) {
       setActionLinks(phone);
       showActionBox();
-      statusEl.textContent = "正在開啟植物介紹頁…";
-      markPlant(phone);
-      setTimeout(goToPlantPage, 150);
+      statusEl.textContent = "正在同步植物導覽紀錄…";
+
+      const result = await markPlant(phone);
+
+      if (result && result.success) {
+        statusEl.textContent = "已完成導覽紀錄，正在開啟植物介紹頁…";
+        setTimeout(goToPlantPage, 250);
+        return;
+      }
+
+      statusEl.textContent = "本次導覽紀錄同步較慢，請點『前往植物介紹頁』繼續；稍後可到進度頁確認是否已記錄。";
+      goBtn.style.display = "block";
     }
 
     function start() {
