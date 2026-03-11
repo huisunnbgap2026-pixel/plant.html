@@ -223,7 +223,7 @@
   <div class="wrap">
     <div class="hero">
       <h1>植物探索導覽站</h1>
-      <p>系統會先背景記錄本次植物探索，接著直接開啟植物介紹頁面。</p>
+      <p>系統會先完成探索紀錄，接著直接開啟植物介紹頁面。</p>
     </div>
 
     <div class="card">
@@ -263,9 +263,8 @@
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/";
+    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant.html/";
     const AUTO_KEY = "plant_auto_opened_";
-    const REDIRECT_DELAY_MS = 180;
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -309,8 +308,13 @@
         phone: phone,
         home: homeUrl
       });
+      const goUrl = buildUrl(APP_URL, {
+        mode: "plant_go",
+        plant: plantId,
+        phone: phone
+      });
 
-      goBtn.href = pageUrl;
+      goBtn.href = goUrl;
       scanBtn.href = scanUrl;
       queryBtn.href = queryUrl;
       rewardBtn.href = rewardUrl;
@@ -319,32 +323,6 @@
 
     function showActionBox() {
       actionBox.style.display = "block";
-    }
-
-    function backgroundMarkPlant(phone) {
-      const markUrl = `${APP_URL}?mode=plant_mark_api&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}&_ts=${Date.now()}`;
-
-      try {
-        if (navigator.sendBeacon) {
-          const blob = new Blob([], { type: "text/plain" });
-          navigator.sendBeacon(markUrl, blob);
-          return;
-        }
-      } catch (e) {}
-
-      try {
-        const img = new Image();
-        img.src = markUrl;
-      } catch (e) {}
-
-      try {
-        fetch(markUrl, {
-          method: "GET",
-          mode: "no-cors",
-          cache: "no-store",
-          keepalive: true
-        }).catch(() => {});
-      } catch (e) {}
     }
 
     function startWithPhone(phone) {
@@ -360,11 +338,8 @@
       sessionStorage.setItem(AUTO_KEY + plantId, "1");
       statusEl.textContent = "正在開啟植物介紹頁…";
 
-      backgroundMarkPlant(phone);
-
-      setTimeout(function() {
-        window.location.href = pageUrl;
-      }, REDIRECT_DELAY_MS);
+      const goUrl = `${APP_URL}?mode=plant_go&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+      window.location.href = goUrl;
     }
 
     function start() {
