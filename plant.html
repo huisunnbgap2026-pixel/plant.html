@@ -57,13 +57,17 @@
     }
 
     .hero:before{
-      width:170px;height:170px;
-      top:-50px;right:-30px;
+      width:170px;
+      height:170px;
+      top:-50px;
+      right:-30px;
     }
 
     .hero:after{
-      width:100px;height:100px;
-      bottom:-20px;left:-10px;
+      width:100px;
+      height:100px;
+      bottom:-20px;
+      left:-10px;
     }
 
     .hero h1{
@@ -223,13 +227,13 @@
   <div class="wrap">
     <div class="hero">
       <h1>植物探索導覽站</h1>
-      <p>系統會先完成探索紀錄，接著直接開啟植物介紹頁面。</p>
+      <p>系統會先完成探索紀錄，若達成 bonus 將顯示植物徽章，再開啟植物介紹頁面。</p>
     </div>
 
     <div class="card">
       <div class="section-title">Plant Guide</div>
       <h2>植物探索入口</h2>
-      <p class="lead">掃描植物牌後，會直接前往植物介紹頁。</p>
+      <p class="lead">掃描植物牌後，會前往植物介紹頁。</p>
 
       <div class="status-box">
         <div class="status-label">目前狀態</div>
@@ -263,7 +267,7 @@
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant.html/index.html";
+    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
     const AUTO_KEY = "plant_auto_opened_";
 
     function normalizePhone(phone) {
